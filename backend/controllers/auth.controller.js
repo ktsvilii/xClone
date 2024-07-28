@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs';
 
-import User from '../models/user.module.js';
+import User from '../models/user.model.js';
 import { generateTokenAndSetCookie } from '../lib/utils/generateToken.js';
 
 export const signup = async (req, res) => {
@@ -70,7 +70,7 @@ export const login = async (req, res) => {
     }
 
     generateTokenAndSetCookie(user._id, res);
-    res.status(201).json({
+    return res.status(201).json({
       _id: user._id,
       fullName: user.fullName,
       username: user.username,
