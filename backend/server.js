@@ -7,6 +7,7 @@ import { v2 as cloudinary } from 'cloudinary';
 import authRoutes from './routes/auth.routes.js';
 import userRoutes from './routes/user.routes.js';
 import postsRoutes from './routes/post.routes.js';
+import notificationRoutes from './routes/notification.routes.js';
 
 import connect from './db/connect.js';
 
@@ -27,6 +28,7 @@ app.use(cookieParser());
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/posts', postsRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 app.listen(5000, () => {
   console.log('Server is running on port 5000');
