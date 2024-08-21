@@ -1,23 +1,60 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+
 import { CiImageOn } from 'react-icons/ci';
 import { BsEmojiSmileFill } from 'react-icons/bs';
 import { useRef, useState } from 'react';
 import { IoCloseSharp } from 'react-icons/io5';
 import { useForm } from 'react-hook-form';
+import toast from 'react-hot-toast';
 
 const CreatePost = () => {
   const [img, setImg] = useState(null);
 
   const imgRef = useRef(null);
 
-  const isPending = false;
-  const isError = false;
+  const { data: authUser } = useQuery({ queryKey: ['authUser'] });
+  const queryClient = useQueryClient();
 
-  const data = {
-    profileImg: '/avatars/boy1.png',
-  };
-
-  const { register, handleSubmit } = useForm({
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { isValid },
+  } = useForm({
     mode: 'onChange',
+  });
+
+  const {
+    mutate: createPost,
+    isPending,
+    isError,
+    error,
+  } = useMutation({
+    mutationFn: async ({ text, img }) => {
+      const res = await fetch('/api/posts/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text, img }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to login');
+      }
+
+      return data;
+    },
+    onSuccess: () => {
+      toast.success('Post created successfully');
+      queryClient.invalidateQueries('posts');
+      reset();
+      setImg(null);
+    },
+    onError: error => {
+      toast.error(error.message);
+    },
   });
 
   const handleImgChange = e => {
@@ -31,14 +68,18 @@ const CreatePost = () => {
     }
   };
 
+  const submitForm = ({ text }) => {
+    createPost({ text, img });
+  };
+
   return (
     <div className='flex p-4 items-start gap-4 border-b border-gray-700'>
       <div className='avatar'>
         <div className='w-8 rounded-full'>
-          <img src={data.profileImg || '/avatar-placeholder.png'} />
+          <img src={authUser.profileImg || '/avatar-placeholder.png'} />
         </div>
       </div>
-      <form className='flex flex-col gap-2 w-full' onSubmit={handleSubmit}>
+      <form className='flex flex-col gap-2 w-full' onSubmit={handleSubmit(submitForm)}>
         <textarea
           className='textarea w-full p-0 text-lg resize-none border-none focus:outline-none  border-gray-800'
           placeholder='What is happening?!'
@@ -63,11 +104,15 @@ const CreatePost = () => {
             <BsEmojiSmileFill className='fill-primary w-5 h-5 cursor-pointer' />
           </div>
           <input type='file' hidden ref={imgRef} accept='image/*' onChange={handleImgChange} />
-          <button className='btn btn-primary rounded-full btn-sm text-white px-4'>
+          <button
+            type='submit'
+            disabled={isPending || !isValid}
+            className='btn btn-primary rounded-full btn-sm text-white px-4'
+          >
             {isPending ? 'Posting...' : 'Post'}
           </button>
         </div>
-        {isError && <div className='text-red-500'>Something went wrong</div>}
+        {isError && <div className='text-red-500'>{error.message}</div>}
       </form>
     </div>
   );

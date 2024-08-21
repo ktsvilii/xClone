@@ -34,7 +34,6 @@ const LoginPage = () => {
       if (!res.ok) {
         throw new Error(data.error || 'Failed to login');
       }
-      console.log(data);
 
       return data;
     },
