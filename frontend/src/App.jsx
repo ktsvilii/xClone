@@ -32,8 +32,6 @@ function App() {
     retry: false,
   });
 
-  console.log(authUser);
-
   if (isLoading) {
     return (
       <div className='h-screen flex justify-center items-center'>

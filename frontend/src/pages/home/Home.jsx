@@ -2,9 +2,10 @@ import { useState } from 'react';
 
 import Posts from 'components/common/Posts';
 import CreatePost from './CreatePost';
+import { FeedType } from 'shared/types';
 
 const HomePage = () => {
-  const [feedType, setFeedType] = useState('forYou');
+  const [feedType, setFeedType] = useState(FeedType.FOR_YOU);
 
   return (
     <div className='flex-[4_4_0] mr-auto border-r border-gray-700 min-h-screen'>
@@ -14,17 +15,19 @@ const HomePage = () => {
           className={
             'flex justify-center flex-1 p-3 hover:bg-secondary transition duration-300 cursor-pointer relative'
           }
-          onClick={() => setFeedType('forYou')}
+          onClick={() => setFeedType(FeedType.FOR_YOU)}
         >
           For you
-          {feedType === 'forYou' && <div className='absolute bottom-0 w-10  h-1 rounded-full bg-primary'></div>}
+          {feedType === FeedType.FOR_YOU && <div className='absolute bottom-0 w-10  h-1 rounded-full bg-primary'></div>}
         </div>
         <div
           className='flex justify-center flex-1 p-3 hover:bg-secondary transition duration-300 cursor-pointer relative'
-          onClick={() => setFeedType('following')}
+          onClick={() => setFeedType(FeedType.FOLLOWING)}
         >
           Following
-          {feedType === 'following' && <div className='absolute bottom-0 w-10  h-1 rounded-full bg-primary'></div>}
+          {feedType === FeedType.FOLLOWING && (
+            <div className='absolute bottom-0 w-10  h-1 rounded-full bg-primary'></div>
+          )}
         </div>
       </div>
 
@@ -32,7 +35,7 @@ const HomePage = () => {
       <CreatePost />
 
       {/* POSTS */}
-      <Posts />
+      <Posts feedType={feedType} />
     </div>
   );
 };
