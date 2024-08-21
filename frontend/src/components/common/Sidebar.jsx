@@ -5,12 +5,38 @@ import { IoNotifications } from 'react-icons/io5';
 import { FaUser } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import { BiLogOut } from 'react-icons/bi';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
 
 const Sidebar = () => {
   const data = {
     fullName: 'John Doe',
     username: 'johndoe',
     profileImg: '/avatars/boy1.png',
+  };
+
+  const queryClient = useQueryClient();
+
+  const { mutate: logoutMutate } = useMutation({
+    mutationFn: async () => {
+      const res = await fetch('/api/auth/logout', {
+        method: 'POST',
+      });
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to logout');
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['authUser'] });
+    },
+    onError: error => {
+      toast.error(error.message);
+    },
+  });
+
+  const handleLogout = () => {
+    logoutMutate();
   };
 
   return (
@@ -64,7 +90,7 @@ const Sidebar = () => {
                 <p className='text-white font-bold text-sm w-20 truncate'>{data?.fullName}</p>
                 <p className='text-slate-500 text-sm'>@{data?.username}</p>
               </div>
-              <BiLogOut className='w-5 h-5 cursor-pointer' />
+              <BiLogOut onClick={handleLogout} className='w-5 h-5 cursor-pointer' />
             </div>
           </Link>
         )}

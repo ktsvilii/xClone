@@ -5,6 +5,8 @@ import XSvg from 'components/svgs/X';
 import { MdOutlineMail } from 'react-icons/md';
 import { MdPassword } from 'react-icons/md';
 import { useForm } from 'react-hook-form';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
 
 const LoginPage = () => {
   const {
@@ -15,11 +17,38 @@ const LoginPage = () => {
     mode: 'onChange',
   });
 
-  const onSubmit = data => {
-    console.log(data);
-  };
+  const queryClient = useQueryClient();
 
-  const isError = false;
+  const { mutate, isError, isPending, error } = useMutation({
+    mutationFn: async ({ username, password }) => {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to login');
+      }
+      console.log(data);
+
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['authUser'] });
+    },
+    onError: error => {
+      toast.error(error.message);
+    },
+  });
+
+  const onSubmit = data => {
+    mutate(data);
+  };
 
   return (
     <div className='max-w-screen-xl mx-auto flex h-screen px-10'>
@@ -56,8 +85,8 @@ const LoginPage = () => {
             {errors.password && <small className='text-red-500'>Password is a required field.</small>}
           </div>
 
-          <button className='btn rounded-full btn-primary text-white'>Login</button>
-          {isError && <p className='text-red-500'>Something went wrong</p>}
+          <button className='btn rounded-full btn-primary text-white'> {isPending ? 'Loading...' : 'Login'}</button>
+          {isError && <p className='text-red-500'>{error.message}</p>}
         </form>
         <div className='flex flex-col lg:w-2/3 gap-2 mt-4'>
           <p className='text-white text-lg'>{"Don't"} have an account?</p>

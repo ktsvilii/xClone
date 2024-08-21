@@ -13,4 +13,13 @@ export default defineConfig({
       utils: fileURLToPath(new URL('./src/utils', import.meta.url)),
     },
   },
+  server: {
+    port: 3000,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+      },
+    },
+  },
 });
