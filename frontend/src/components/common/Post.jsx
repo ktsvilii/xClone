@@ -2,62 +2,32 @@ import { useState } from 'react';
 
 import { Link } from 'react-router-dom';
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import toast from 'react-hot-toast';
+import { useQuery } from '@tanstack/react-query';
 
 import { FaRegComment } from 'react-icons/fa';
 import { BiRepost } from 'react-icons/bi';
 import { FaRegHeart } from 'react-icons/fa';
+import { FaHeart } from 'react-icons/fa';
 import { FaRegBookmark } from 'react-icons/fa6';
 import { FaTrash } from 'react-icons/fa';
+
+import usePost from 'hooks/usePost';
 
 import LoadingSpinner from './LoadingSpinner';
 
 const Post = ({ post }) => {
   const [comment, setComment] = useState('');
-  const queryClient = useQueryClient();
 
   const { data: authUser } = useQuery({ queryKey: ['authUser'] });
+
+  const { formattedDate, deletePost, isDeletingPost, isLikingPost, handlePostComment, handleLikePost } = usePost(post);
 
   const postOwner = post.user;
   const isLiked = post.likes.includes(authUser._id);
 
   const isMyPost = authUser._id === postOwner._id;
 
-  const formattedDate = '1h';
-
   const isCommenting = false;
-
-  const { mutate: deletePost, isPending } = useMutation({
-    mutationFn: async () => {
-      try {
-        const res = await fetch(`/api/posts/delete/${post._id}`, {
-          method: 'DELETE',
-        });
-        const data = await res.json();
-        if (data.error) return null;
-        if (!res.ok) {
-          throw new Error(data.error || 'Something went wrong');
-        }
-        return data;
-      } catch (error) {
-        throw new Error(error);
-      }
-    },
-    onSuccess: () => {
-      toast.success('Post deleted successfully');
-      queryClient.invalidateQueries({ queryKey: ['posts'] });
-    },
-    onError: error => {
-      toast.error(error.message);
-    },
-  });
-
-  const handlePostComment = e => {
-    e.preventDefault();
-  };
-
-  const handleLikePost = () => {};
 
   return (
     <div className='flex gap-2 items-start p-4 border-b border-gray-700'>
@@ -76,11 +46,11 @@ const Post = ({ post }) => {
             <span>·</span>
             <span>{formattedDate}</span>
           </span>
-          {isMyPost && !isPending && (
+          {isMyPost && !isDeletingPost && (
             <span className='flex justify-end flex-1'>
               <FaTrash className='cursor-pointer hover:text-red-500' onClick={deletePost} />
 
-              {isPending && <LoadingSpinner size='sm' />}
+              {isDeletingPost && <LoadingSpinner size='sm' />}
             </span>
           )}
         </div>
@@ -132,8 +102,8 @@ const Post = ({ post }) => {
                     value={comment}
                     onChange={e => setComment(e.target.value)}
                   />
-                  <button className='btn btn-primary rounded-full btn-sm text-white px-4'>
-                    {isCommenting ? <span className='loading loading-spinner loading-md'></span> : 'Post'}
+                  <button disabled={isCommenting} className='btn btn-primary rounded-full btn-sm text-white px-4'>
+                    {isCommenting ? <LoadingSpinner /> : 'Post'}
                   </button>
                 </form>
               </div>
@@ -146,10 +116,13 @@ const Post = ({ post }) => {
               <span className='text-sm text-slate-500 group-hover:text-green-500'>0</span>
             </div>
             <div className='flex gap-1 items-center group cursor-pointer' onClick={handleLikePost}>
-              {!isLiked && <FaRegHeart className='w-4 h-4 cursor-pointer text-slate-500 group-hover:text-pink-500' />}
-              {isLiked && <FaRegHeart className='w-4 h-4 cursor-pointer text-pink-500 ' />}
+              {isLikingPost && <LoadingSpinner size='sm' />}
+              {!isLiked && !isLikingPost && (
+                <FaRegHeart className='w-4 h-4 cursor-pointer text-slate-500 group-hover:text-red-500' />
+              )}
+              {isLiked && !isLikingPost && <FaHeart className='w-4 h-4 cursor-pointer text-red-500 ' />}
 
-              <span className={`text-sm text-slate-500 group-hover:text-pink-500 ${isLiked ? 'text-pink-500' : ''}`}>
+              <span className={`text-sm group-hover:text-red-500 ${isLiked ? 'text-red-500' : 'text-slate-500'}`}>
                 {post.likes.length}
               </span>
             </div>

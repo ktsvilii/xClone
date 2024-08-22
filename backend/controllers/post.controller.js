@@ -173,8 +173,12 @@ export const toggleLikePost = async (req, res) => {
     if (isLiked) {
       await Post.updateOne({ _id: post.id }, { $pull: { likes: userId } });
       await User.updateOne({ _id: userId }, { $pull: { likedPosts: post.id } });
-      res.status(200).json({ message: 'Post unliked' });
+
+      const updatedLikes = post.likes.filter(id => id.toString() !== userId.toString());
+      res.status(200).json(updatedLikes);
     } else {
+      post.likes.push(userId);
+
       await Post.updateOne({ _id: post.id }, { $push: { likes: userId } });
       await User.updateOne({ _id: userId }, { $push: { likedPosts: post.id } });
 
@@ -187,7 +191,8 @@ export const toggleLikePost = async (req, res) => {
         await notification.save();
       }
 
-      res.status(200).json({ message: 'Post liked' });
+      const updatedLikes = post.likes;
+      res.status(200).json(updatedLikes);
     }
   } catch (error) {
     console.log(`Error in toggleLikePost controller ${error.message}`);
