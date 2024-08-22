@@ -1,34 +1,43 @@
 import { Link } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+
+import { toast } from 'react-hot-toast';
+
 import LoadingSpinner from 'components/common/LoadingSpinner';
 
 import { IoSettingsOutline } from 'react-icons/io5';
 
 const Notifications = () => {
-  const isLoading = false;
-  const notifications = [
-    {
-      _id: '1',
-      from: {
-        _id: '1',
-        username: 'johndoe',
-        profileImg: '/avatars/boy2.png',
-      },
-      type: 'follow',
-    },
-    {
-      _id: '2',
-      from: {
-        _id: '2',
-        username: 'janedoe',
-        profileImg: '/avatars/girl1.png',
-      },
-      type: 'like',
-    },
-  ];
+  const queryClient = useQueryClient();
 
-  const deleteNotifications = () => {
-    alert('All notifications deleted');
-  };
+  const { data: notifications, isLoading } = useQuery({
+    queryKey: ['notifications'],
+    queryFn: async () => {
+      const res = await fetch('/api/notifications');
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Something went wrong');
+      return data;
+    },
+  });
+
+  const { mutate: deleteNotifications } = useMutation({
+    mutationFn: async () => {
+      const res = await fetch('/api/notifications', {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.error || 'Something went wrong');
+      return data;
+    },
+    onSuccess: () => {
+      toast.success('Notifications deleted successfully');
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    },
+    onError: error => {
+      toast.error(error.message);
+    },
+  });
 
   return (
     <div className='flex-[4_4_0] border-l border-r border-gray-700 min-h-screen'>
