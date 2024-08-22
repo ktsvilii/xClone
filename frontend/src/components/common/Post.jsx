@@ -20,14 +20,20 @@ const Post = ({ post }) => {
 
   const { data: authUser } = useQuery({ queryKey: ['authUser'] });
 
-  const { formattedDate, deletePost, isDeletingPost, isLikingPost, handlePostComment, handleLikePost } = usePost(post);
+  const { formattedDate, deletePost, isDeletingPost, isLikingPost, handleLikePost, commentPost, isCommentingPost } =
+    usePost(post);
 
   const postOwner = post.user;
   const isLiked = post.likes.includes(authUser._id);
 
   const isMyPost = authUser._id === postOwner._id;
 
-  const isCommenting = false;
+  const handlePostComment = e => {
+    if (isCommentingPost) return;
+    e.preventDefault();
+    setComment('');
+    commentPost(comment);
+  };
 
   return (
     <div className='flex gap-2 items-start p-4 border-b border-gray-700'>
@@ -102,8 +108,8 @@ const Post = ({ post }) => {
                     value={comment}
                     onChange={e => setComment(e.target.value)}
                   />
-                  <button disabled={isCommenting} className='btn btn-primary rounded-full btn-sm text-white px-4'>
-                    {isCommenting ? <LoadingSpinner /> : 'Post'}
+                  <button disabled={isCommentingPost} className='btn btn-primary rounded-full btn-sm text-white px-4'>
+                    {isCommentingPost ? <LoadingSpinner /> : 'Post'}
                   </button>
                 </form>
               </div>

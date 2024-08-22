@@ -126,6 +126,7 @@ export const createPost = async (req, res) => {
     });
 
     await newPost.save();
+    await newPost.populate('user');
     res.status(201).json(newPost);
   } catch (error) {
     console.log(`Error in createPost controller ${error.message}`);
@@ -222,9 +223,11 @@ export const commentPost = async (req, res) => {
     post.comments.push(newComment);
     await post.save();
 
-    return res.status(200).json(post);
+    await post.populate('comments.user');
+
+    res.status(200).json(post.comments);
   } catch (error) {
-    console.log(`Error in commentPost controller ${error.message}`);
+    console.log(`Error in commentPost controller: ${error.message}`);
     res.status(500).json({ error: 'Something went wrong' });
   }
 };

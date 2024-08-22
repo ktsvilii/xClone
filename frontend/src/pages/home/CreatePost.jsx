@@ -46,9 +46,9 @@ const CreatePost = () => {
 
       return data;
     },
-    onSuccess: () => {
+    onSuccess: newPost => {
       toast.success('Post created successfully');
-      queryClient.invalidateQueries('posts');
+      queryClient.setQueryData(['posts'], oldData => [newPost, ...oldData]);
       reset();
       setImg(null);
     },

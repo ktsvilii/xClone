@@ -1,10 +1,12 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+
 import toast from 'react-hot-toast';
+
+import { formatPostDate } from 'utils/data';
 
 const usePost = post => {
   const queryClient = useQueryClient();
 
-  const formattedDate = '1h';
   const { mutate: deletePost, isPending: isDeletingPost } = useMutation({
     mutationFn: async () => {
       try {
@@ -23,7 +25,9 @@ const usePost = post => {
     },
     onSuccess: () => {
       toast.success('Post deleted successfully');
-      queryClient.invalidateQueries({ queryKey: ['posts'] });
+      queryClient.setQueryData(['posts'], oldData => {
+        return oldData.filter(p => p._id !== post._id);
+      });
     },
     onError: error => {
       toast.error(error.message);
@@ -56,15 +60,49 @@ const usePost = post => {
     },
   });
 
-  const handlePostComment = e => {
-    e.preventDefault();
-  };
+  const { mutate: commentPost, isPending: isCommentingPost } = useMutation({
+    mutationFn: async commentText => {
+      const res = await fetch(`/api/posts/comment/${post._id}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          text: commentText,
+        }),
+      });
+      const data = await res.json();
+      if (data.error) return null;
+      if (!res.ok) {
+        throw new Error(data.error || 'Something went wrong');
+      }
+      return data;
+    },
+    onSuccess: comments => {
+      queryClient.setQueryData(['posts'], oldData => {
+        return oldData.map(p => (p._id === post._id ? { ...p, comments } : p));
+      });
+    },
+    onError: error => {
+      toast.error(error.message);
+    },
+  });
+
+  const formattedDate = formatPostDate(post.createdAt);
 
   const handleLikePost = () => {
     if (isLikingPost) return;
     likePost();
   };
-  return { formattedDate, deletePost, isDeletingPost, isLikingPost, handlePostComment, handleLikePost };
+  return {
+    formattedDate,
+    deletePost,
+    isDeletingPost,
+    isLikingPost,
+    handleLikePost,
+    commentPost,
+    isCommentingPost,
+  };
 };
 
 export default usePost;
