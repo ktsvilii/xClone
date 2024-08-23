@@ -2,7 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
 import { useQuery } from '@tanstack/react-query';
+
 import { formatMemberSinceDate } from 'utils/date';
+import useFollow from 'hooks/useFollow';
 
 import Posts from 'components/common/Posts';
 import ProfileHeaderSkeleton from 'components/skeletons/ProfileHeaderSkeleton';
@@ -15,6 +17,8 @@ import { IoCalendarOutline } from 'react-icons/io5';
 import { FaLink } from 'react-icons/fa';
 import { MdEdit } from 'react-icons/md';
 import { FeedType } from 'shared/types';
+import LoadingSpinner from 'components/common/LoadingSpinner';
+import useUpdateUserProfile from '../../hooks/useUpdateUserProfile';
 
 const Profile = () => {
   const [coverImg, setCoverImg] = useState(null);
@@ -25,6 +29,9 @@ const Profile = () => {
   const profileImgRef = useRef(null);
 
   const { username } = useParams();
+
+  const { data: authUser } = useQuery({ queryKey: ['authUser'] });
+  const { followController, isPending } = useFollow();
 
   const {
     data: user,
@@ -43,7 +50,10 @@ const Profile = () => {
     },
   });
 
-  const isMyProfile = false;
+  const { updateProfile, isUpdatingProfile } = useUpdateUserProfile();
+
+  const isMyProfile = authUser._id === user?._id;
+  const isUserFollowed = authUser.following.includes(user?._id);
   const memberSinceDate = formatMemberSinceDate(user?.createdAt);
 
   const handleImgChange = (e, state) => {
@@ -82,7 +92,7 @@ const Profile = () => {
             {/* COVER IMG */}
             <div className='relative group/cover'>
               <img
-                src={coverImg || user?.coverImg || '/cover.png'}
+                src={coverImg || user?.coverImage || '/cover.png'}
                 className='h-52 w-full object-cover'
                 alt='cover image'
               />
@@ -112,7 +122,7 @@ const Profile = () => {
               {/* USER AVATAR */}
               <div className='avatar absolute -bottom-16 left-4'>
                 <div className='w-32 rounded-full relative group/avatar'>
-                  <img alt='profile-img' src={profileImg || user?.profileImg || '/avatar-placeholder.png'} />
+                  <img alt='profile-img' src={profileImg || user?.profileImage || '/avatar-placeholder.png'} />
                   <div className='absolute top-5 right-3 p-1 bg-primary rounded-full group-hover/avatar:opacity-100 opacity-0 cursor-pointer'>
                     {isMyProfile && (
                       <MdEdit className='w-4 h-4 text-white' onClick={() => profileImgRef.current.click()} />
@@ -122,18 +132,30 @@ const Profile = () => {
               </div>
             </div>
             <div className='flex justify-end px-4 mt-5'>
-              {isMyProfile && <EditProfileModal />}
+              {isMyProfile && <EditProfileModal authUser={authUser} />}
               {!isMyProfile && (
-                <button className='btn btn-outline rounded-full btn-sm' onClick={() => alert('Followed successfully')}>
-                  Follow
+                <button
+                  className={`btn ${isUserFollowed ? 'btn-primary' : 'btn-outline'} rounded-full btn-sm`}
+                  onClick={() => followController(user?._id)}
+                >
+                  {isPending && <LoadingSpinner size='sm' />}
+                  {!isPending && isUserFollowed && 'Unfollow'}
+                  {!isPending && !isUserFollowed && 'Follow'}
                 </button>
               )}
               {(coverImg || profileImg) && (
                 <button
                   className='btn btn-primary rounded-full btn-sm text-white px-4 ml-2'
-                  onClick={() => alert('Profile updated successfully')}
+                  onClick={async () => {
+                    await updateProfile({
+                      coverImg,
+                      profileImg,
+                    });
+                    setCoverImg(null);
+                    setProfileImg(null);
+                  }}
                 >
-                  Update
+                  {isUpdatingProfile ? <LoadingSpinner size='sm' /> : 'Update'}
                 </button>
               )}
             </div>

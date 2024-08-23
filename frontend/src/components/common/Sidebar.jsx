@@ -9,12 +9,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 
 const Sidebar = () => {
-  const data = {
-    fullName: 'John Doe',
-    username: 'johndoe',
-    profileImg: '/avatars/boy1.png',
-  };
-
   const queryClient = useQueryClient();
 
   const { mutate: logoutMutate } = useMutation({
@@ -24,7 +18,7 @@ const Sidebar = () => {
       });
 
       if (!res.ok) {
-        throw new Error(data.error || 'Failed to logout');
+        throw new Error('Failed to logout');
       }
     },
     onSuccess: () => {
@@ -69,7 +63,7 @@ const Sidebar = () => {
 
           <li className='flex justify-center md:justify-start'>
             <Link
-              to={`/profile/${data?.username}`}
+              to={`/profile/${authUser?.username}`}
               className='flex gap-3 items-center hover:bg-stone-900 transition-all rounded-full duration-300 py-2 pl-2 pr-4 max-w-fit cursor-pointer'
             >
               <FaUser className='w-6 h-6' />
@@ -84,7 +78,7 @@ const Sidebar = () => {
           >
             <div className='avatar hidden md:inline-flex'>
               <div className='w-8 rounded-full'>
-                <img src={authUser?.profileImg || '/avatar-placeholder.png'} />
+                <img src={authUser?.profileImage || '/avatar-placeholder.png'} />
               </div>
             </div>
             <div className='flex justify-between flex-1'>

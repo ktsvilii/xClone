@@ -9,19 +9,15 @@ const usePost = post => {
 
   const { mutate: deletePost, isPending: isDeletingPost } = useMutation({
     mutationFn: async () => {
-      try {
-        const res = await fetch(`/api/posts/delete/${post._id}`, {
-          method: 'DELETE',
-        });
-        const data = await res.json();
-        if (data.error) return null;
-        if (!res.ok) {
-          throw new Error(data.error || 'Something went wrong');
-        }
-        return data;
-      } catch (error) {
-        throw new Error(error);
+      const res = await fetch(`/api/posts/delete/${post._id}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (data.error) return null;
+      if (!res.ok) {
+        throw new Error(data.error || 'Something went wrong');
       }
+      return data;
     },
     onSuccess: () => {
       toast.success('Post deleted successfully');
@@ -36,19 +32,15 @@ const usePost = post => {
 
   const { mutate: likePost, isPending: isLikingPost } = useMutation({
     mutationFn: async () => {
-      try {
-        const res = await fetch(`/api/posts/like/${post._id}`, {
-          method: 'POST',
-        });
-        const data = await res.json();
-        if (data.error) return null;
-        if (!res.ok) {
-          throw new Error(data.error || 'Something went wrong');
-        }
-        return data;
-      } catch (error) {
-        throw new Error(error);
+      const res = await fetch(`/api/posts/like/${post._id}`, {
+        method: 'POST',
+      });
+      const data = await res.json();
+      if (data.error) return null;
+      if (!res.ok) {
+        throw new Error(data.error || 'Something went wrong');
       }
+      return data;
     },
     onSuccess: likes => {
       queryClient.setQueryData(['posts'], oldData => {
