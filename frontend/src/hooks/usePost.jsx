@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import toast from 'react-hot-toast';
 
-import { formatPostDate } from 'utils/data';
+import { formatPostDate } from 'utils/date';
 
 const usePost = post => {
   const queryClient = useQueryClient();

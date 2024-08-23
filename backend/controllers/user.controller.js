@@ -5,16 +5,15 @@ import Notification from '../models/notification.model.js';
 import User from '../models/user.model.js';
 
 export const getUserProfile = async (req, res) => {
+  const { username } = req.params;
   try {
-    const { username } = req.params;
-
     const user = await User.findOne({ username }).select('-password');
 
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    res.status(202).json(user);
+    res.status(200).json(user);
   } catch (error) {
     console.log(`Error in getUserProfile controller ${error.message}`);
     res.status(500).json({ error: 'Something went wrong' });
